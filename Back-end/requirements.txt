@@ -1,0 +1,15 @@
+transformers==4.39.*
+accelerate
+bitsandbytes
+fairlearn==0.9.*
+gradio==4.*
+pydantic>=2,<3
+uvicorn
+fastapi
+openpyxl
+detoxify==0.5.*
+nltk
+langchain==0.2.*           # 核心
+langchain-community==0.2.* # ChatTongyi 在这里
+dashscope==1.*             # 通义千问官方 SDK
+pandas==2.*
