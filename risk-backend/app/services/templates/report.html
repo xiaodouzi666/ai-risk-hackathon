@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Risk Report</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    h1   { color: #2563EB; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid #ccc; padding: .4rem .6rem; text-align:left; }
+    th { background:#f0f4ff; }
+  </style>
+</head>
+<body>
+  <h1>TrustedAI Risk Report</h1>
+  <p><strong>Evaluated URL:</strong> {{ model_url }}</p>
+
+  <table>
+    <thead>
+      <tr><th>Dimension</th><th>Score</th><th>Summary</th></tr>
+    </thead>
+    <tbody>
+    {% for dim, info in results.items() %}
+      <tr>
+        <td>{{ dim }}</td>
+        <td>{{ info.score }}</td>
+        <td>{{ info.summary }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
