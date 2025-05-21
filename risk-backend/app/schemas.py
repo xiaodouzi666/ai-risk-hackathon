@@ -13,4 +13,4 @@ class DimResult(BaseModel):
     issues: List[Dict]
 
 class EvalResponse(BaseModel):
-    results: Dict[DIM, DimResult]
+    results: Dict[str, DimResult]

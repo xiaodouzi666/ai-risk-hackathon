@@ -1,47 +1,43 @@
-"""
-Adapter for OpenAI Chat/Completions → 返回离散标签
-------------------------------------------------
-* 仅依赖   pip install openai>=1.14.0
-* 读取  OPENAI_API_KEY 环境变量
-* 默认用 gpt-3.5-turbo；想换 gpt-4o 传 model_name
-"""
 from __future__ import annotations
-import os, itertools, base64, requests, json
+import os, itertools
 from typing import Iterable, List
 import openai
+import numpy as np
 
+TOP_LOGPROBS = 5
 
 class OpenAIAdapter:
     def __init__(
         self,
-        model_url: str | None = None,          # 不用；保持签名一致
+        model_url: str | None = None,
         task: str = "text",
         *,
         model_name: str = "gpt-4.1",
         system_prompt: str | None = None,
         batch_size: int = 8,
-        **_
+        **_,
     ):
         openai.api_key = os.getenv("OPENAI_API_KEY")
         if not openai.api_key:
             raise RuntimeError("OPENAI_API_KEY not set")
 
-        self.model_name = model_name
-        self.task = task
+        self.model_name   = (model_url or model_name).strip()
+        self.task         = task
+        self.batch_size   = batch_size
         self.system_prompt = (
             system_prompt
-            or "You are a classification model. "
-               "Respond ONLY with the class label (0 or 1)."
+            or "You are a classification model. Respond ONLY with class label 0 or 1."
         )
-        self.batch_size = batch_size
-        self.supports_grad = False  # 纯黑盒
+        self.supports_grad = False   # 依旧黑盒
 
-    # ------------------------------------------------------------------
-    def _classify_batch(self, prompts: List[str]) -> List[int]:
-        """Zero-shot二分类示例：返回 0 或 1。"""
-        labels = []
+    # ------------------------------------------------------------------ #
+    def _classify_batch(self, prompts: List[str], *, proba: bool = False) -> list:
+        """
+        如果 proba=True → 返回 “p(正类)” (float 0-1)，否则返回离散标签。
+        """
+        outputs = []
         for p in prompts:
-            resp = openai.chat.completions.create(
+            kwargs = dict(
                 model=self.model_name,
                 messages=[
                     {"role": "system", "content": self.system_prompt},
@@ -50,18 +46,38 @@ class OpenAIAdapter:
                 temperature=0,
                 max_tokens=3,
             )
+
+            # ------- ① OpenAI 新版参数 --------------------------
+            if proba:
+                kwargs.update(
+                    logprobs=True,          # **布尔量**
+                    top_logprobs=TOP_LOGPROBS,
+                )
+            # ---------------------------------------------------
+
+            resp = openai.chat.completions.create(**kwargs)
+
             txt = resp.choices[0].message.content.strip()
-            lbl = int("".join(filter(str.isdigit, txt)) or 0)
-            labels.append(lbl)
-        return labels
 
+            if proba:
+                # 从 logprobs 里找 “1” 的概率，没有就 fallback =0.5
+                token_info = resp.choices[0].logprobs.content
+                # token_info 例： [{'token':'1', 'logprob':-0.05}, …]
+                p1 = 0.5
+                for tok in token_info:
+                    if tok["token"].strip() == "1":
+                        p1 = np.exp(tok["logprob"])
+                        break
+                outputs.append(p1)
+            else:
+                outputs.append(int("".join(filter(str.isdigit, txt)) or 0))
 
-    # ------------------------------------------------------------------
-    def predict_batch(self, inputs: Iterable):
+        return outputs
+
+    # ------------------------------------------------------------------ #
+    def predict_batch(self, inputs: Iterable, *, proba: bool = False):
         if self.task == "text":
-            return self._classify_batch(list(inputs))
-        elif self.task == "image":
-            raise NotImplementedError(
-                "OpenAIAdapter currently only supports text classification demo."
-            )
+            return self._classify_batch(list(inputs), proba=proba)
+        raise NotImplementedError("Only text classification demo supported.")
+
     batch_predict = predict_batch

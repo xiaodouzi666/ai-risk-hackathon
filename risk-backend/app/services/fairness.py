@@ -120,4 +120,5 @@ def evaluate_fairness(model_url: str,
     score, issues, overall, worst_gap = _metricframe_summary(np.asarray(y_true), np.asarray(y_pred), sens_df)
     summary = f"Overall acc {overall:.2f}, worst gap {worst_gap:.2f}"
 
-    return {"score": score, "summary": summary, "issues": issues}
+    result = {"score": score, "summary": summary, "issues": issues}
+    return result
