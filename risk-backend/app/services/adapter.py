@@ -1,10 +1,3 @@
-"""
-Adapter for OpenAI Chat/Completions → 返回离散标签
-------------------------------------------------
-* 仅依赖   pip install openai>=1.14.0
-* 读取  OPENAI_API_KEY 环境变量
-* 默认用 gpt-3.5-turbo；想换 gpt-4o 传 model_name
-"""
 from __future__ import annotations
 import os, itertools, base64, requests, json
 from typing import Iterable, List
@@ -14,7 +7,7 @@ import openai
 class OpenAIAdapter:
     def __init__(
         self,
-        model_url: str | None = None,          # 不用；保持签名一致
+        model_url: str | None = None, 
         task: str = "text",
         *,
         model_name: str = "gpt-3.5-turbo",
@@ -34,7 +27,7 @@ class OpenAIAdapter:
                "Respond ONLY with the class label (0 or 1)."
         )
         self.batch_size = batch_size
-        self.supports_grad = False  # 纯黑盒
+        self.supports_grad = False
 
     # ------------------------------------------------------------------
     def _classify_batch(self, prompts: List[str]) -> List[int]:
@@ -44,7 +37,6 @@ class OpenAIAdapter:
             {"role": "user", "content": p},
         ]
 
-        # OpenAI 不支持 batch 一次多条 messages；循环即可
         labels = []
         for p in prompts:
             resp = openai.chat.completions.create(
@@ -57,7 +49,6 @@ class OpenAIAdapter:
                 max_tokens=3,
             )
             txt = resp.choices[0].message.content.strip()
-            # 只留数字部分
             lbl = int("".join(filter(str.isdigit, txt)) or 0)
             labels.append(lbl)
         return labels

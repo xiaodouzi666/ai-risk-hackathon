@@ -13,7 +13,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score
 
 from .data_utils import load_dataset
-from .openai_adapter import OpenAIAdapter as RestAPIAdapter  # or generic adapter
+from .openai_adapter import OpenAIAdapter as RestAPIAdapter
 
 
 _MASK_TOKEN = "*"
@@ -60,7 +60,7 @@ def evaluate_robustness(model_url: str,
     score = int(min(1.0, ratio) * 100)  
     summary = f"Acc clean {acc_clean:.2f} → adv {acc_adv:.2f}"
 
-    issues: list[dict] = []        # 没有高风险样本就保持空列表
+    issues: list[dict] = []
 
     result = {"score": score, "summary": summary, "issues": issues}
 

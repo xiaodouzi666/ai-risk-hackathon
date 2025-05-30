@@ -80,16 +80,13 @@ class _AdapterClassifier(BaseEstimator, ClassifierMixin):
         x : ndarray shape (n,1) (str/object dtype)
         先尝试 adapter.batch_predict(..., proba=True)，若不支持则退化为标签→one-hot。
         """
-        # 提取文本
         texts = [str(t.item() if hasattr(t, "item") else t) for t in x[:, 0]]
 
-        # 先试 proba=True
         try:
             preds = np.asarray(self.adapter.batch_predict(texts, proba=True))
         except TypeError:
             preds = np.asarray(self.adapter.batch_predict(texts))
 
-        # 如果结果是一维，则是离散标签 → one-hot
         if preds.ndim == 1:
             oh = np.zeros((len(preds), self.nb_classes), dtype=np.float32)
             oh[np.arange(len(preds)), preds.astype(int)] = 1.0

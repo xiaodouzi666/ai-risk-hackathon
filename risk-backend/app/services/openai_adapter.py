@@ -28,7 +28,7 @@ class OpenAIAdapter:
             system_prompt
             or "You are a classification model. Respond ONLY with class label 0 or 1."
         )
-        self.supports_grad = False   # 依旧黑盒
+        self.supports_grad = False
 
     # ------------------------------------------------------------------ #
     def _classify_batch(self, prompts: List[str], *, proba: bool = False) -> list:
@@ -47,10 +47,9 @@ class OpenAIAdapter:
                 max_tokens=3,
             )
 
-            # ------- ① OpenAI 新版参数 --------------------------
             if proba:
                 kwargs.update(
-                    logprobs=True,          # **布尔量**
+                    logprobs=True,
                     top_logprobs=TOP_LOGPROBS,
                 )
             # ---------------------------------------------------
@@ -60,9 +59,7 @@ class OpenAIAdapter:
             txt = resp.choices[0].message.content.strip()
 
             if proba:
-                # 从 logprobs 里找 “1” 的概率，没有就 fallback =0.5
                 token_info = resp.choices[0].logprobs.content
-                # token_info 例： [{'token':'1', 'logprob':-0.05}, …]
                 p1 = 0.5
                 for tok in token_info:
                     if tok["token"].strip() == "1":

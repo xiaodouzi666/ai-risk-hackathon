@@ -7,7 +7,7 @@ env = Environment(loader=FileSystemLoader(pathlib.Path(__file__).parent / "templ
 def build_pdf(data: dict, model_url: str) -> bytes:
     html = env.get_template("report.html").render(
         model_url=model_url,
-        results=data            # ← 这里直接用 data
+        results=data
     )
     return HTML(string=html).write_pdf()
 

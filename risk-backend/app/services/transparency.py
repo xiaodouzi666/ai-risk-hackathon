@@ -8,7 +8,6 @@ TOP_K = 10                       # 返回前 k 重要词
 MAX_TOKENS = 80                  # 截断，控制花费
 
 def _mask_tokenise(text):
-    # 简易分词：按非字母数字切
     tokens = re.split(r"(\W+)", text)[:MAX_TOKENS]
     idx = [i for i in range(0, len(tokens), 2) if tokens[i].strip()]
     return tokens, idx
@@ -16,12 +15,12 @@ def _mask_tokenise(text):
 def _importance(adapter, text):
     tokens, word_idx = _mask_tokenise(text)
 
-    # ---------- 1) 基线预测 ----------
+    # baseline
     try:
-        full_p = adapter.batch_predict([text], proba=True)[0]  # 概率
+        full_p = adapter.batch_predict([text], proba=True)[0]
         proba_mode = True
     except TypeError:
-        full_lbl = adapter.batch_predict([text])[0]            # 标签
+        full_lbl = adapter.batch_predict([text])[0]
         proba_mode = False
 
     scores = []
@@ -32,11 +31,11 @@ def _importance(adapter, text):
         try:
             p = adapter.batch_predict([masked], proba=True)[0] if proba_mode else None
         except TypeError:
-            proba_mode = False   # 若第一次没报错, 但第二次报错 -> 回退
+            proba_mode = False
             p = None
 
         if proba_mode:
-            scores.append(full_p - p)                  # 概率差
+            scores.append(full_p - p)
         else:
             masked_lbl = adapter.batch_predict([masked])[0]
             scores.append(1.0 if masked_lbl != full_lbl else 0.0)

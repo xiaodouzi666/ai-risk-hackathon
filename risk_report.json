@@ -1,0 +1,12 @@
+{
+  "Fairness": {
+    "score": 100,
+    "summary": "Overall acc 1.00, worst gap 0.00",
+    "issues": []
+  },
+  "fairness": {
+    "score": 100,
+    "summary": "Overall acc 1.00, worst gap 0.00",
+    "issues": []
+  }
+}
